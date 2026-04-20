@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tarsier.eye — Login</title>
+    <meta name="description" content="Sign in to tarsier.eye and explore the stunning nature of the Philippines." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="login.css" />
+</head>
+
+<body>
+
+    <!-- Background decoration -->
+    <div class="login-bg" aria-hidden="true">
+        <div class="leaf-particle">🍃</div>
+        <div class="leaf-particle">🌿</div>
+        <div class="leaf-particle">🍂</div>
+        <div class="leaf-particle">🌱</div>
+        <div class="leaf-particle">🍃</div>
+    </div>
+
+    <div class="login-container">
+
+        <!-- Tarsier Eye Hero -->
+        <div class="eye-hero">
+            <div class="eye-container">
+                <div class="eye-outer">
+                    <div class="eye-iris">
+                        <div class="eye-pupil"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="eye-brand">tarsier.eye</div>
+            <div class="eye-tagline">Discover the Philippines</div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card">
+            <h1 class="login-title">Welcome Back</h1>
+            <p class="login-subtitle">Sign in to continue exploring</p>
+
+            <!-- Error Message -->
+            <div class="login-error" id="loginError" role="alert">
+                <span>⚠️</span>
+                <span id="loginErrorText">Invalid email or password.</span>
+            </div>
+
+            <form id="loginForm" autocomplete="on" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email</label>
+                    <input class="form-input" id="loginEmail" type="email" placeholder="you@tarsier.eye"
+                        autocomplete="email" required aria-label="Email address" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <input class="form-input" id="loginPassword" type="password" placeholder="••••••••"
+                        autocomplete="current-password" required aria-label="Password" />
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-label">
+                        <input class="remember-checkbox" id="rememberMe" type="checkbox" />
+                        Remember me
+                    </label>
+                </div>
+
+                <button class="login-btn" id="loginBtn" type="submit">
+                    <span id="loginBtnText">Sign In</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p class="login-hint">
+                    Demo credentials: <code>demo@tarsier.eye</code> / <code>tarsier123</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Redirect to index if already logged in
+        redirectIfAuth();
+
+        // Pre-fill remembered email
+        const remembered = localStorage.getItem(REMEMBER_KEY);
+        if (remembered) {
+            document.getElementById("loginEmail").value = remembered;
+            document.getElementById("rememberMe").checked = true;
+        }
+
+        // ── LOGIN FORM HANDLER ──────────────────────────────────
+        const form = document.getElementById("loginForm");
+        const emailInput = document.getElementById("loginEmail");
+        const passInput = document.getElementById("loginPassword");
+        const loginBtn = document.getElementById("loginBtn");
+        const btnText = document.getElementById("loginBtnText");
+        const errorEl = document.getElementById("loginError");
+        const errorText = document.getElementById("loginErrorText");
+
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorEl.classList.add("visible");
+            emailInput.classList.add("error");
+            passInput.classList.add("error");
+        }
+
+        function clearError() {
+            errorEl.classList.remove("visible");
+            emailInput.classList.remove("error");
+            passInput.classList.remove("error");
+        }
+
+        function setLoading(loading) {
+            loginBtn.disabled = loading;
+            if (loading) {
+                btnText.innerHTML = '<div class="spinner"></div> Signing in…';
+            } else {
+                btnText.textContent = "Sign In";
+            }
+        }
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            clearError();
+
+            const email = emailInput.value.trim();
+            const password = passInput.value;
+            const remember = document.getElementById("rememberMe").checked;
+
+            if (!email) { showError("Please enter your email address."); return; }
+            if (!password) { showError("Please enter your password."); return; }
+
+            setLoading(true);
+
+            // Simulate network delay for realism
+            setTimeout(() => {
+                const user = attemptLogin(email, password);
+                if (user) {
+                    setAuth(user, remember);
+                    window.location.href = "index.html";
+                } else {
+                    setLoading(false);
+                    showError("Invalid email or password. Please try again.");
+                }
+            }, 800);
+        });
+
+        // Clear error on input
+        emailInput.addEventListener("input", clearError);
+        passInput.addEventListener("input", clearError);
+    </script>
+
+</body>
+
+</html>

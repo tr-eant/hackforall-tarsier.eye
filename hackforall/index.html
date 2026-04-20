@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tarsier.eye — Discover the Philippines</title>
+    <meta name="description"
+        content="Explore the stunning natural wonders of the Philippines through Google Street View. Discover national parks, waterfalls, volcanoes, beaches, rice terraces, caves, and more." />
+    <meta property="og:title" content="tarsier.eye" />
+    <meta property="og:description" content="Virtually explore Philippine nature spots via Street View." />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+    <!-- Auth guard -->
+    <script src="auth.js"></script>
+    <script>requireAuth();</script>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div class="loading-overlay visible" id="loadingOverlay" role="status" aria-live="polite">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading tarsier.eye</p>
+        <p class="loading-sub" id="loadingSubText">Connecting to Google Street View…</p>
+    </div>
+
+    <!-- ===== SHARE MODAL ===== -->
+    <div class="modal-backdrop" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+        <div class="modal">
+            <h2 class="modal-title" id="shareModalTitle">🔗 Share This Spot</h2>
+            <p class="modal-sub">Copy the link below to share this location with friends.</p>
+            <div class="share-url-box">
+                <input class="share-url-input" id="shareUrlInput" type="text" readonly aria-label="Share URL" />
+                <button class="btn btn-primary" id="copyShareBtn" aria-label="Copy link">
+                    <span class="btn-icon">📋</span>
+                    <span>Copy</span>
+                </button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="closeShareBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="navbar-brand">
+            <div class="navbar-logo" aria-hidden="true">🌿</div>
+            <div>
+                <div class="navbar-title">tarsier.eye</div>
+                <div class="navbar-subtitle">Discover the Philippines</div>
+            </div>
+        </div>
+        <div class="navbar-stats" id="navStats">
+            <div class="stat-item">
+                <div class="stat-value" id="statSpots">25</div>
+                <div class="stat-label">Spots</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statFavorites">0</div>
+                <div class="stat-label">Favorites</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statCategories">8</div>
+                <div class="stat-label">Categories</div>
+            </div>
+        </div>
+        <button class="btn-icon-only logout-btn" id="logoutBtn" title="Sign out" aria-label="Sign out">🚪</button>
+    </nav>
+
+    <!-- ===== APP BODY ===== -->
+    <div class="app-body">
+
+        <!-- ===== VIEWER AREA ===== -->
+        <main class="viewer-area" role="main">
+
+            <!-- Spot Info Banner -->
+            <div class="spot-banner" id="spotBanner" aria-label="Current spot information">
+                <div class="spot-info-left">
+                    <div class="spot-emoji" id="bannerEmoji">🌿</div>
+                    <div class="spot-text">
+                        <div class="spot-name" id="bannerName">Loading…</div>
+                        <div class="spot-meta">
+                            <span class="badge" id="bannerBadge">—</span>
+                            <span id="bannerRegion">Philippines</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-sm">
+                    <button class="btn-icon-only" id="shareBtn" title="Share this spot"
+                        aria-label="Share this spot">🔗</button>
+                    <button class="btn-icon-only" id="directionsBtn" title="Get directions"
+                        aria-label="Get directions">🗺️</button>
+                </div>
+            </div>
+
+            <!-- Street View -->
+            <div id="street-view" role="region" aria-label="Google Street View"></div>
+
+            <!-- Controls Bar -->
+            <div class="controls-bar" role="toolbar" aria-label="Navigation controls">
+                <button class="btn btn-primary" id="randomBtn" aria-label="Load random nature spot">
+                    <span class="btn-icon">🎲</span>
+                    <span>Random Spot</span>
+                </button>
+                <button class="btn btn-ghost" id="favoriteBtn" aria-label="Favorite this spot">
+                    <span class="btn-icon">🤍</span>
+                    <span>Favorite</span>
+                </button>
+            </div>
+
+        </main>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar" role="complementary" aria-label="Sidebar">
+
+            <!-- Tabs -->
+            <div class="sidebar-tabs" role="tablist" aria-label="Sidebar tabs">
+                <div class="sidebar-tab active" id="tabDiscover" role="tab" aria-selected="true"
+                    aria-controls="panelDiscover" tabindex="0">🎲 Discover</div>
+                <div class="sidebar-tab" id="tabPopular" role="tab" aria-selected="false"
+                    aria-controls="panelPopular" tabindex="0">📍 Popular</div>
+                <div class="sidebar-tab" id="tabFavorites" role="tab" aria-selected="false"
+                    aria-controls="panelFavorites" tabindex="0">
+                    ❤️ Favs <span id="favCount"></span>
+                </div>
+            </div>
+
+            <!-- ===== RANDOM DISCOVERIES PANEL ===== -->
+            <div class="sidebar-content" id="panelDiscover" role="tabpanel" aria-labelledby="tabDiscover">
+                <div class="sidebar-panel active" id="discoverPanel">
+
+                    <!-- Discovery CTA -->
+                    <div class="discover-hero">
+                        <div class="discover-hero-icon">🌏</div>
+                        <div class="discover-hero-title">Random Discoveries</div>
+                        <div class="discover-hero-sub">Uncover hidden nature spots & attractions across the 7,641 islands of the Philippines</div>
+                        <button class="btn btn-primary discover-btn" id="discoverBtn" aria-label="Discover a random spot">
+                            <span class="btn-icon">🎲</span>
+                            <span>Discover Random Spot</span>
+                        </button>
+                    </div>
+
+                    <!-- Discovery Result Card (hidden until first discovery) -->
+                    <div class="discovery-card hidden" id="discoveryCard">
+                        <div class="discovery-photo-wrap">
+                            <img class="discovery-photo" id="discoveryPhoto" alt="Discovered place" />
+                            <div class="discovery-photo-overlay"></div>
+                            <div class="discovery-badge" id="discoveryType">—</div>
+                        </div>
+                        <div class="discovery-info">
+                            <div class="discovery-name" id="discoveryName">—</div>
+                            <div class="discovery-address" id="discoveryAddress">📍 —</div>
+                            <div class="discovery-rating" id="discoveryRating"></div>
+                        </div>
+                        <div class="discovery-actions">
+                            <button class="btn btn-ghost" id="discoveryViewBtn" aria-label="View in Street View">👁️ View</button>
+                            <button class="btn btn-ghost" id="discoveryDirBtn" aria-label="Get directions">🗺️ Directions</button>
+                            <button class="btn btn-ghost" id="discoveryFavBtn" aria-label="Save to favorites">🤍 Save</button>
+                        </div>
+                    </div>
+
+                    <!-- Shimmer Skeleton (shown during loading) -->
+                    <div class="discovery-skeleton hidden" id="discoverySkeleton">
+                        <div class="skeleton-photo shimmer"></div>
+                        <div class="skeleton-line shimmer" style="width:80%;"></div>
+                        <div class="skeleton-line shimmer" style="width:60%;"></div>
+                        <div class="skeleton-line-short shimmer" style="width:40%;"></div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Discovery History -->
+                    <div class="filter-title">Recent Discoveries</div>
+                    <div class="discovery-history" id="discoveryHistory">
+                        <div class="discovery-history-empty">
+                            <span>✨</span> Click discover to start exploring!
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ===== POPULAR LOCATIONS PANEL ===== -->
+            <div class="sidebar-content hidden" id="panelPopular" role="tabpanel" aria-labelledby="tabPopular">
+                <div class="sidebar-panel active" id="popularPanel">
+
+                    <!-- Category Filters -->
+                    <div class="filter-section">
+                        <div class="filter-title">Filter by Category</div>
+                        <div class="filter-chips" id="categoryChips" role="group" aria-label="Category filters">
+                            <div class="chip active" data-category="all">🌏 All</div>
+                            <div class="chip" data-category="National Parks">🌲 National Parks</div>
+                            <div class="chip" data-category="Waterfalls">💧 Waterfalls</div>
+                            <div class="chip" data-category="Mountains/Volcanoes">🌋 Mountains</div>
+                            <div class="chip" data-category="Beaches/Islands">🏖️ Beaches</div>
+                            <div class="chip" data-category="Rice Terraces">🌾 Rice Terraces</div>
+                            <div class="chip" data-category="Caves">🕳️ Caves</div>
+                            <div class="chip" data-category="Hot Springs">♨️ Hot Springs</div>
+                            <div class="chip" data-category="Wildlife Sanctuaries">🦅 Wildlife</div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Spot List -->
+                    <div class="filter-title" style="margin-bottom: 10px;">Popular Philippine Destinations</div>
+                    <div class="spot-grid" id="spotGrid" role="list" aria-label="Nature spots list"></div>
+                </div>
+            </div>
+
+            <!-- ===== FAVORITES PANEL ===== -->
+            <div class="sidebar-content hidden" id="panelFavorites" role="tabpanel" aria-labelledby="tabFavorites">
+                <div class="sidebar-panel active" id="favoritesPanel">
+                    <div id="favoritesContainer"></div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
